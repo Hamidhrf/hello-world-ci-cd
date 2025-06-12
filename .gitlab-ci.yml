@@ -10,16 +10,18 @@ services:
 variables:
   DOCKER_DRIVER: overlay2
   CI_REGISTRY: registry.gitlab.com
+  IMAGE_TAG: $CI_REGISTRY_IMAGE:latest
 
 build:
   stage: build
   only:
     - main
   script:
+    - echo "Logging in to GitLab Container Registry..."
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
     - echo "Building Docker image..."
-    - docker login -u "$REGISTRY_USER" -p "$REGISTRY_PASSWORD" $CI_REGISTRY
-    - docker build -t "$CI_REGISTRY_IMAGE:latest" .
-    - docker push "$CI_REGISTRY_IMAGE:latest"
+    - docker build -t $IMAGE_TAG .
+    - docker push $IMAGE_TAG
 
 test:
   stage: test
@@ -27,25 +29,21 @@ test:
     - main
   image: node:18
   script:
-    - npm install
+    - npm ci
     - npm test
 
 deploy:
   stage: deploy
   only:
     - main
-  environment:
-    name: production
   image: alpine:latest
-  before_script:
+  script:
     - apk add --no-cache openssh-client
     - mkdir -p ~/.ssh
     - echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
     - chmod 600 ~/.ssh/id_rsa
     - echo -e "Host $SSH_HOST\n\tStrictHostKeyChecking no\n" > ~/.ssh/config
-  script:
     - echo "Deploying to EC2..."
     - scp -i ~/.ssh/id_rsa docker-compose.yml $SSH_USER@$SSH_HOST:/home/ubuntu/app/docker-compose.yml
-    - ssh -i ~/.ssh/id_rsa $SSH_USER@$SSH_HOST "cd /home/ubuntu/app && docker pull $CI_REGISTRY_IMAGE:latest && docker compose down && docker compose up -d"
-  when: on_success
+    - ssh -i ~/.ssh/id_rsa $SSH_USER@$SSH_HOST "cd /home/ubuntu/app && docker pull $IMAGE_TAG && docker compose down && docker compose up -d"
 
