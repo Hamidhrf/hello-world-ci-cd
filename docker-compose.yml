@@ -1,10 +1,19 @@
-version: '3.8'
-
 services:
   web:
-    image: hello-world-app
-    build: .
+    image: registry.gitlab.com/it-works-on-my-machine1/hello-world:latest
+    container_name: hello-web
     ports:
       - "80:3000"
-    restart: unless-stopped
+    environment:
+      - PORT=3000
+    networks:
+      - hello-net
+    volumes:
+      - app-logs:/app/logs
 
+networks:
+  hello-net:
+    driver: bridge
+
+volumes:
+  app-logs:
