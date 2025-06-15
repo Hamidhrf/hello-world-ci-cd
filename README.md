@@ -19,7 +19,7 @@ cd hello-world
 npm install
 ### 3. Run the app
 node app.js
-# Visit http://localhost:3000
+Visit http://localhost:3000
 ### 4. Run tests
 npm test
 ### 5. Run with Docker (optional)
@@ -43,5 +43,5 @@ Tests written in app.test.js
 
 Use supertest and jest
 
-One endpoint tested: /
+One endpoint tested
 
