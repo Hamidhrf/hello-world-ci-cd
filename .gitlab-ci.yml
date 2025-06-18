@@ -24,14 +24,6 @@ build:
   only:
     - main
   script:
-<<<<<<< HEAD
-    - echo "Logging in to GitLab Container Registry..."
-    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
-    - echo "Building Docker image with tags: latest and $IMAGE_VERSION"
-    - docker build -t $IMAGE_TAG -t $VERSIONED_TAG .
-    - docker push $IMAGE_TAG
-    - docker push $VERSIONED_TAG
-=======
     - |
       echo "Logging in to GitLab Container Registry..."
       docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
@@ -39,7 +31,6 @@ build:
       docker build -t $IMAGE_TAG -t $VERSIONED_TAG .
       docker push $IMAGE_TAG
       docker push $VERSIONED_TAG
->>>>>>> 1175b3a (Recreate .gitlab-ci.yml with versioned image support)
 
 test:
   stage: test
