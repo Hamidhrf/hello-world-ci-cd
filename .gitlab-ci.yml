@@ -62,7 +62,21 @@ deploy:
       echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
       chmod 600 ~/.ssh/id_rsa
       echo -e "Host $SSH_HOST\n\tStrictHostKeyChecking no\n" > ~/.ssh/config
-      echo "Deploying to EC2..."
+      echo "Deploying to EC2 with version $IMAGE_VERSION..."
+
       scp -i ~/.ssh/id_rsa docker-compose.yml $SSH_USER@$SSH_HOST:/home/ubuntu/app/docker-compose.yml
-      ssh -i ~/.ssh/id_rsa $SSH_USER@$SSH_HOST "cd /home/ubuntu/app && docker pull $IMAGE_TAG && docker compose down && docker compose up -d"
+
+      ssh -i ~/.ssh/id_rsa $SSH_USER@$SSH_HOST "
+        cd /home/ubuntu/app
+
+        if grep -q 'image:' docker-compose.yml; then
+          grep 'image:' docker-compose.yml > last_version.txt
+        fi
+
+        sed -i 's|image: .*|image: '"$VERSIONED_TAG"'|' docker-compose.yml
+      
+        docker pull $VERSIONED_TAG
+        docker compose down
+        docker compose up -d
+      "
 
