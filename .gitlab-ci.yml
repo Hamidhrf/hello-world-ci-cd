@@ -70,11 +70,11 @@ deploy:
         cd /home/ubuntu/app
 
         if grep -q 'image:' docker-compose.yml; then
-          grep 'image:' docker-compose.yml > last_version.txt
+          echo "$IMAGE_VERSION" > last_version.txt
         fi
 
-        sed -i 's|image: .*|image: '"$VERSIONED_TAG"'|' docker-compose.yml
-      
+        sed -i 's|image:.*|image: registry.gitlab.com/it-works-on-my-machine1/hello-world:$VERSIONED_TAG|' docker-compose.yml
+
         docker pull $VERSIONED_TAG
         docker compose down
         docker compose up -d
