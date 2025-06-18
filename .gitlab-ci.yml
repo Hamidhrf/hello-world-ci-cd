@@ -66,17 +66,17 @@ deploy:
 
       scp -i ~/.ssh/id_rsa docker-compose.yml $SSH_USER@$SSH_HOST:/home/ubuntu/app/docker-compose.yml
 
-      ssh -i ~/.ssh/id_rsa $SSH_USER@$SSH_HOST << 'EOF'
-        cd /home/ubuntu/app
+      ssh -i ~/.ssh/id_rsa $SSH_USER@$SSH_HOST <<EOF
+      cd /home/ubuntu/app
 
-        if grep -q 'image:' docker-compose.yml; then
-          echo "$IMAGE_VERSION" > last_version.txt
-        fi
+      if grep -q 'image:' docker-compose.yml; then
+        echo "$IMAGE_VERSION" > last_version.txt
+      fi
 
-        sed -i "s|image: .*|image: registry.gitlab.com/it-works-on-my-machine1/hello-world:$IMAGE_VERSION|" docker-compose.yml
+      sed -i "s|image: .*|image: registry.gitlab.com/it-works-on-my-machine1/hello-world:$IMAGE_VERSION|" docker-compose.yml
 
-        docker pull registry.gitlab.com/it-works-on-my-machine1/hello-world:$IMAGE_VERSION
-        docker compose down
-        docker compose up -d
+      docker pull registry.gitlab.com/it-works-on-my-machine1/hello-world:$IMAGE_VERSION
+      docker compose down
+      docker compose up -d
 EOF
 
