@@ -56,27 +56,35 @@ deploy:
     - main
   image: node:18
   script:
-    - |-
+    - |
       set -e
+      # ───── prepare SSH ─────
       apt-get update -qq && apt-get install -y -qq openssh-client
       mkdir -p ~/.ssh
       echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
       chmod 600 ~/.ssh/id_rsa
       printf "Host %s\n\tStrictHostKeyChecking no\n" "$SSH_HOST" > ~/.ssh/config
 
+      # ───── copy compose file to EC2 ─────
       scp -i ~/.ssh/id_rsa docker-compose.yml \
           "$SSH_USER@$SSH_HOST:/home/ubuntu/app/docker-compose.yml"
 
-      ssh -i ~/.ssh/id_rsa "$SSH_USER@$SSH_HOST" \
-        IMAGE_VERSION="$IMAGE_VERSION" 'bash -s' <<'EOF'
-        set -e
-        cd /home/ubuntu/app
-        if grep -qE "^\s*image:" docker-compose.yml; then
-          grep -E "^\s*image:" docker-compose.yml | awk -F: "{print \$NF}" > last_version.txt
-        fi
-        sed -i "s|image: .*|image: registry.gitlab.com/it-works-on-my-machine1/hello-world:${IMAGE_VERSION}|" docker-compose.yml
-        docker pull registry.gitlab.com/it-works-on-my-machine1/hello-world:${IMAGE_VERSION}
-        docker compose down
-        docker compose up -d
-EOF
+      # ───── remote deploy ─────
+      # shell-quoted heredoc so remote sees raw $IMAGE_VERSION
+      ssh -i ~/.ssh/id_rsa "$SSH_USER@$SSH_HOST" 'bash -s' <<'REMOTE'
+set -e
+cd /home/ubuntu/app
+
+# remember current image tag
+grep -E "^\s*image:" docker-compose.yml | awk -F: "{print \$NF}" > last_version.txt || true
+
+NEW_TAG="${IMAGE_VERSION}"
+
+# update compose
+sed -i "s|image:.*|image: registry.gitlab.com/it-works-on-my-machine1/hello-world:${NEW_TAG}|" docker-compose.yml
+
+docker pull registry.gitlab.com/it-works-on-my-machine1/hello-world:${NEW_TAG}
+docker compose down
+docker compose up -d
+REMOTE
 
