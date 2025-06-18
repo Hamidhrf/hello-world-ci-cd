@@ -24,12 +24,22 @@ build:
   only:
     - main
   script:
+<<<<<<< HEAD
     - echo "Logging in to GitLab Container Registry..."
     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
     - echo "Building Docker image with tags: latest and $IMAGE_VERSION"
     - docker build -t $IMAGE_TAG -t $VERSIONED_TAG .
     - docker push $IMAGE_TAG
     - docker push $VERSIONED_TAG
+=======
+    - |
+      echo "Logging in to GitLab Container Registry..."
+      docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+      echo "Building Docker image with tags: latest and $IMAGE_VERSION"
+      docker build -t $IMAGE_TAG -t $VERSIONED_TAG .
+      docker push $IMAGE_TAG
+      docker push $VERSIONED_TAG
+>>>>>>> 1175b3a (Recreate .gitlab-ci.yml with versioned image support)
 
 test:
   stage: test
@@ -41,12 +51,13 @@ test:
     paths:
       - node_modules/
   script:
-    - npm config set registry https://registry.npmmirror.com
-    - npm config set fetch-retries 5
-    - npm config set fetch-retry-mintimeout 2000
-    - npm config set fetch-retry-maxtimeout 10000
-    - npm ci
-    - npm test
+    - |
+      npm config set registry https://registry.npmmirror.com
+      npm config set fetch-retries 5
+      npm config set fetch-retry-mintimeout 2000
+      npm config set fetch-retry-maxtimeout 10000
+      npm ci
+      npm test
 
 deploy:
   stage: deploy
@@ -54,11 +65,13 @@ deploy:
     - main
   image: node:18
   script:
-    - apt-get update && apt-get install -y openssh-client
-    - mkdir -p ~/.ssh
-    - echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
-    - chmod 600 ~/.ssh/id_rsa
-    - echo -e "Host $SSH_HOST\n\tStrictHostKeyChecking no\n" > ~/.ssh/config
-    - echo "Deploying to EC2..."
-    - scp -i ~/.ssh/id_rsa docker-compose.yml $SSH_USER@$SSH_HOST:/home/ubuntu/app/docker-compose.yml
-    - ssh -i ~/.ssh/id_rsa $SSH_USER@$SSH_HOST "cd /home/ubuntu/app && docker pull $IMAGE_TAG && docker compose down && docker compose up -d"
+    - |
+      apt-get update && apt-get install -y openssh-client
+      mkdir -p ~/.ssh
+      echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+      chmod 600 ~/.ssh/id_rsa
+      echo -e "Host $SSH_HOST\n\tStrictHostKeyChecking no\n" > ~/.ssh/config
+      echo "Deploying to EC2..."
+      scp -i ~/.ssh/id_rsa docker-compose.yml $SSH_USER@$SSH_HOST:/home/ubuntu/app/docker-compose.yml
+      ssh -i ~/.ssh/id_rsa $SSH_USER@$SSH_HOST "cd /home/ubuntu/app && docker pull $IMAGE_TAG && docker compose down && docker compose up -d"
+
