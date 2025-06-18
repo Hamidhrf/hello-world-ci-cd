@@ -56,33 +56,27 @@ deploy:
     - main
   image: node:18
   script:
-    - |                   
+    - |-
       set -e
-
-      apt-get update && apt-get install -y openssh-client
+      apt-get update -qq && apt-get install -y -qq openssh-client
       mkdir -p ~/.ssh
       echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
       chmod 600 ~/.ssh/id_rsa
-      echo -e "Host $SSH_HOST\n\tStrictHostKeyChecking no\n" > ~/.ssh/config
-
-      echo "Deploying to EC2 with IMAGE_VERSION=$IMAGE_VERSION"
+      printf "Host %s\n\tStrictHostKeyChecking no\n" "$SSH_HOST" > ~/.ssh/config
 
       scp -i ~/.ssh/id_rsa docker-compose.yml \
-        "$SSH_USER@$SSH_HOST:/home/ubuntu/app/docker-compose.yml"
+          "$SSH_USER@$SSH_HOST:/home/ubuntu/app/docker-compose.yml"
 
-      ssh -i ~/.ssh/id_rsa "$SSH_USER@$SSH_HOST" <<'EOF'
+      ssh -i ~/.ssh/id_rsa "$SSH_USER@$SSH_HOST" \
+        IMAGE_VERSION="$IMAGE_VERSION" 'bash -s' <<'EOF'
         set -e
         cd /home/ubuntu/app
-
-        if grep -q '^ *image:' docker-compose.yml; then
-          grep '^ *image:' docker-compose.yml | awk -F: '{print $NF}' > last_version.txt
+        if grep -qE "^\s*image:" docker-compose.yml; then
+          grep -E "^\s*image:" docker-compose.yml | awk -F: "{print \$NF}" > last_version.txt
         fi
-
-       
         sed -i "s|image: .*|image: registry.gitlab.com/it-works-on-my-machine1/hello-world:${IMAGE_VERSION}|" docker-compose.yml
-
         docker pull registry.gitlab.com/it-works-on-my-machine1/hello-world:${IMAGE_VERSION}
         docker compose down
         docker compose up -d
-EOF                       
+EOF
 
