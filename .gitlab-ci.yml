@@ -70,14 +70,16 @@ deploy:
           "$SSH_USER@$SSH_HOST:/home/ubuntu/app/docker-compose.yml"
 
       # ───── remote deploy ─────
-      # shell-quoted heredoc so remote sees raw $IMAGE_VERSION
-      ssh -i ~/.ssh/id_rsa "$SSH_USER@$SSH_HOST" 'bash -s' <<'REMOTE'
+      # Pass IMAGE_VERSION as an environment variable to the remote shell
+      ssh -i ~/.ssh/id_rsa "$SSH_USER@$SSH_HOST" IMAGE_VERSION="$IMAGE_VERSION" 'bash -s' <<'REMOTE'
 set -e
 cd /home/ubuntu/app
 
 # remember current image tag
+# Using '|| true' is good to prevent failure if grep finds no match.
 grep -E "^\s*image:" docker-compose.yml | awk -F: "{print \$NF}" > last_version.txt || true
 
+# NEW_TAG will now correctly receive the value of IMAGE_VERSION passed from the CI runner
 NEW_TAG="${IMAGE_VERSION}"
 
 # update compose
@@ -87,4 +89,3 @@ docker pull registry.gitlab.com/it-works-on-my-machine1/hello-world:${NEW_TAG}
 docker compose down
 docker compose up -d
 REMOTE
-
