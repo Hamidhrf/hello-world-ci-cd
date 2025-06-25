@@ -52,7 +52,7 @@ The `.gitlab-ci.yml` file defines the following pipeline stages:
 ## How to Run Locally
 
 ### 1. Clone the repo
-git clone https://gitlab.com/it-works-on-my-machine1/hello-world.git
+git clone https://github.com/Hamidhrf/hello-world-ci-cd.git
 cd hello-world
 ### 2. Install dependencies
 npm install
