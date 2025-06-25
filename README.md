@@ -86,10 +86,15 @@ One endpoint tested
 
 ## DevOps Best Practices Implemented
 ✅ Custom EC2 GitLab Runner for isolation and performance
+
 ✅ Environment variables securely stored in GitLab
+
 ✅ SSH key-based deployment
+
 ✅ npm mirror and retries for stability
+
 ✅ Pipeline caching for faster builds
+
 ✅ Manual rollback strategy with versioned images
 
 
